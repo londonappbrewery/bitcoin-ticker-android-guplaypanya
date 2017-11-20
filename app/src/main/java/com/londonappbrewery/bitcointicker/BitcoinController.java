@@ -15,16 +15,15 @@ import android.widget.Toast;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 import cz.msebera.android.httpclient.Header;
 
 
-public class MainActivity extends AppCompatActivity {
+public class BitcoinController extends AppCompatActivity {
 
     // Constants:
     // TODO: Create the base URL
-    private final String BASE_URL = "https://apiv2.bitcoinaverage.com/indices/global/ticker/BTCUSD";
+    private final String BASE_URL = "https://apiv2.bitcoinaverage.com/indices/global/ticker/BTC";
 
     // Member Variables:
     TextView mPriceTextView;
@@ -32,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.bitcoin_controller_layout);
 
         mPriceTextView = findViewById(R.id.priceLabel);
         Spinner spinner = findViewById(R.id.currency_spinner);
@@ -52,7 +51,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 Log.d("Bitcoin", "" + parent.getItemAtPosition(position));
-                letsDoSomeNetworking(BASE_URL);
+                Log.d("Bitcoin", "Position is: " + position);
+                String finalUrl = BASE_URL + parent.getItemAtPosition(position);
+                Log.d("Bitcoin", "Final Url is: " + finalUrl);
+                letsDoSomeNetworking(finalUrl);
             }
 
             @Override
@@ -66,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private void letsDoSomeNetworking(String url) {
 
         AsyncHttpClient client = new AsyncHttpClient();
-        client.get(BASE_URL , new JsonHttpResponseHandler() {
+        client.get(url , new JsonHttpResponseHandler() {
 
             @Override
             public void onStart(){
@@ -77,6 +79,9 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 // called when response HTTP status is "200 OK"
                 Log.d("Bitcoin", "Success! JSON: " + response.toString());
+
+                BitcoinDataModel bitcoinData = BitcoinDataModel.fromjson(response);
+                updateUI(bitcoinData);
             }
 
             @Override
@@ -84,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
                 // called when response HTTP status is "4XX" (eg. 401, 403, 404)
                 Log.e("Bitcoin", "Fail " + e.toString());
                 Log.d("Bitcoin", "Status code " + statusCode);
-                Toast.makeText(MainActivity.this, "Request Failed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(BitcoinController.this, "Request Failed", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -94,6 +99,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+    }
+
+    // TODO: Add updateUI() here:
+    private void updateUI(BitcoinDataModel bitcoin){
+        mPriceTextView.setText(bitcoin.getPrice());
     }
 
 
